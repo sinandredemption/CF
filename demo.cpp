@@ -106,7 +106,7 @@ void pi_arctan_1(int Precision) {
 }
 
 // Calculate pi using pi = 176 * arctan(1 / 57) + 28 * arctan(1 / 239) - 48 * arctan(1 / 682) + 96 * arctan(1 / 12943)
-void pi_arctan_fast(int Precision) {
+CF pi_arctan_fast(int Precision) {
 	double start = clock();
 
 	CF pi = cf_add(arctan(57, 176, Precision), arctan(12943, 96, Precision), Precision);
@@ -116,13 +116,16 @@ void pi_arctan_fast(int Precision) {
 
 	std::cout << "CF of PI: " << pi.to_str() << std::endl;
 	std::cout << "Took " << (end - start) / CLOCKS_PER_SEC << "s" << std::endl;
+
+	std::cout << "Decimal: " << cf_base_convert(pi, 10) << std::endl;
+
+	return pi;
 }
 
 int main() {
 	pi_simple(1000);
-	//pi_precise(1000);
-	//pi_arctan_1(1000);
-	//pi_arctan_fast(1000);
-
+	pi_precise(1000);
+	pi_arctan_1(1000);
+	pi_arctan_fast(10000);
 	return 0;
 }

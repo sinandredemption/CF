@@ -391,3 +391,80 @@ CF& CF::operator/=(const mpq_class& x) {
 	*this = cf_mul_frac(*this, x.get_den(), x.get_num());
 	return *this;
 }
+
+std::string cf_base_convert(const CF& x, unsigned base, size_t terms)
+{
+	if (terms == 0) {
+		terms = x.precision() * log(2) / log(base);
+	}
+	const std::string DigitTable("0123456789" "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+	std::string out;
+	out.reserve(terms);
+	BaseConversionMagicTable mt(x);
+	
+	size_t done_terms = 0;
+
+	while (mt.x_it != x.end()) {
+		while (mt.x_it != x.end() && !mt.can_egest())
+			mt.ingest();
+
+		if (mt.x_it == x.end())
+			return out;
+
+		int term = mpz_class(mt.a / mt.c).get_si();
+
+		assert(term >= 0);
+		
+		if (term >= base) {
+			assert(done_terms == 0);
+			int t = term;
+			do {
+				int d = t % base;
+				out += DigitTable[d];
+			} while (t /= base);
+
+			std::reverse(out.begin(), out.end());
+		}
+
+		mt.egest(term);
+
+		if (term < base)
+			out += DigitTable[term];
+
+		if (done_terms == 0)
+			out += '.';
+
+		done_terms++;
+		if (done_terms >= terms)
+			return out;
+
+		mt.a *= base;
+		mt.b *= base;
+	}
+
+	assert(false);
+	return "";
+}
+
+void BaseConversionMagicTable::ingest()
+{
+	const auto p = x_it->get_mpz_t();
+	// b = b + a * p
+	mpz_addmul(b.get_mpz_t(), a.get_mpz_t(), p);
+
+	// d = d + c * p
+	mpz_addmul(d.get_mpz_t(), c.get_mpz_t(), p);
+
+	mpz_swap(a.get_mpz_t(), b.get_mpz_t());
+	mpz_swap(c.get_mpz_t(), d.get_mpz_t());
+
+	x_it++;
+}
+
+void BaseConversionMagicTable::egest(unsigned t)
+{
+	// a = a - c * t
+	mpz_submul_ui(a.get_mpz_t(), c.get_mpz_t(), t);
+	// b = b - d * t
+	mpz_submul_ui(b.get_mpz_t(), d.get_mpz_t(), t);
+}

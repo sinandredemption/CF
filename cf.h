@@ -89,6 +89,30 @@ struct MagicTable {
     void single_term_process(CF* out);
 };
 
+struct BaseConversionMagicTable {
+    mpz_class a, b, c, d;
+
+    const CF& x;
+    CF::ConvergentList::const_iterator x_it;
+
+    void ingest();
+    void egest(unsigned term);
+
+    BaseConversionMagicTable(const CF& x_) : x(x_), x_it(x.begin())
+    {
+        a = 1;
+        b = 0;
+        c = 0;
+        d = 1;
+    }
+
+    bool can_egest() {
+        if (c == 0 || d == 0)
+            return false;
+        return a / c == b / d;
+    }
+};
+
 CF cf_add(const CF& a, const CF& b, unsigned long long prec = 0);
 CF cf_add_frac(const CF& a, const mpz_class& num, const mpz_class& den, unsigned long long prec = 0);
 CF cf_sub(const CF& a, const CF& b, unsigned long long prec = 0);
@@ -96,5 +120,7 @@ CF cf_sub_frac(const CF& a, const mpz_class& num, const mpz_class& den, unsigned
 CF cf_mul(const CF& a, const CF& b, unsigned long long prec = 0);
 CF cf_mul_frac(const CF& a, const mpz_class& num, const mpz_class& den, unsigned long long prec = 0);
 CF cf_div(const CF& a, const CF& b, unsigned long long prec = 0);
+
+std::string cf_base_convert(const CF& x, unsigned base, size_t terms = 0);
 
 #endif
